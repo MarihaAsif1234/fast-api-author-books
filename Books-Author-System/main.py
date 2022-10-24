@@ -88,6 +88,12 @@ def read_all_books(authorid: Union[int, None] = None, skip: int = 0, limit: int 
     return books
 
 
+@auth_book_app.get("/books/{book_id}", response_model=schemas.Book)
+def read_book(book_id: int, db: Session = Depends(get_db)):
+    db_user = crud.get_book(db, book_id=book_id)
+    return db_user
+
+
 @auth_book_app.patch("/books/{book_id}", response_model=schemas.Book)
 def update_Book(book: schemas.BookUpdate, book_id: int, db: Session = Depends(get_db)):
     db_book = crud.update_book(db, book=book, book_id=book_id)

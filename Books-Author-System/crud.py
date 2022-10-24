@@ -40,19 +40,23 @@ def create_author(db: Session, author: schemas.AuthorCreate):
 
 
 def update_author(db: Session, author: schemas.AuthorUpdate, author_id: int):
-    if(author.name == "" or regex.search('[a-zA-Z]', author.name) is None):
-        raise HTTPException(
-            status_code=422, detail="Author's name cant be blank and should contain atleast one alphabet from A to Z")
+    if(author.name):
+        if(regex.search('[a-zA-Z]', author.name) is None):
+            raise HTTPException(
+                status_code=422, detail="Author's name cant be blank and should contain atleast one alphabet from A to Z")
+        else:
+            db_author = db.query(models.Author).filter(
+                models.Author.id == author_id).first()
+            author_data = author.dict(exclude_unset=True)
+            if db_author:
+                for key, value in author_data.items():
+                    setattr(db_author, key, value)
+                db.add(db_author)
+                db.commit()
+                db.refresh(db_author)
     else:
-        db_author = db.query(models.Author).filter(
-            models.Author.id == author_id).first()
-        author_data = author.dict(exclude_unset=True)
-        if db_author:
-            for key, value in author_data.items():
-                setattr(db_author, key, value)
-            db.add(db_author)
-            db.commit()
-            db.refresh(db_author)
+        raise HTTPException(
+            status_code=422, detail="Empty Json")
     return db_author
 
 
@@ -69,6 +73,14 @@ def delete_author(db: Session,  author_id: int):
 #####################################################################################
 
 # CRUD for books
+
+
+def get_book(db: Session, book_id: int):
+    db_book = db.query(models.Book).filter(
+        models.Book.id == book_id).first()
+    if len(db_book) == 0:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return db_book
 
 
 def get_books(db: Session, skip: int = 0, limit: int = 100, author_id: int = None):

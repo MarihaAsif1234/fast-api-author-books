@@ -4,9 +4,12 @@ from main import auth_book_app
 
 client = TestClient(auth_book_app)
 
+###############################################################################################
+# Create Tests
 
-def test_read_author():
-    response = client.get("/authors/4")
+
+def test_read_book():
+    response = client.get("/books/4")
     assert response.status_code == 200
     assert response.json() == {
         "name": "string",
@@ -15,8 +18,8 @@ def test_read_author():
     }
 
 
-def test_read_authors():
-    response = client.get("/authors/")
+def test_read_books():
+    response = client.get("/books/")
     assert response.status_code == 200
     assert response.json() == [
         {
@@ -26,7 +29,7 @@ def test_read_authors():
                 {
                     "name": "hello",
                     "id": 3,
-                    "author_id": 2
+                    "book_id": 2
                 }
             ]
         },
@@ -42,7 +45,7 @@ def test_read_authors():
                 {
                     "name": "aweet",
                     "id": 8,
-                    "author_id": 5
+                    "book_id": 5
                 }
             ]
         },
@@ -53,7 +56,7 @@ def test_read_authors():
                 {
                     "name": "string",
                     "id": 7,
-                    "author_id": 6
+                    "book_id": 6
                 }
             ]
         },
@@ -70,58 +73,175 @@ def test_read_authors():
     ]
 
 
-def test_read_inexistent_author():
-    response = client.get("/authors/970")
+def test_read_inexistent_book():
+    response = client.get("/books/970")
     assert response.status_code == 404
-    assert response.json() == {"detail": "Author not found"}
+    assert response.json() == {"detail": "book not found"}
+
+###############################################################################################
+# Create Tests
 
 
-def test_create_item():
-    response = client.post(
-        "/authors/",
-        json={
-            "name": "string"
-        },
-    )
-    assert response.status_code == 200
-    assert response.json() == {
-        "name": "string",
-        "id": 9,
-        "books": []
-    }
+# def test_create_book():
+#     response = client.post(
+#         "/books/",
+#         json={
+#             "name": "string"
+#         },
+#     )
+#     assert response.status_code == 200
+#     assert response.json() == {
+#         "name": "string",
+#         "id": 9,
+#         "books": []
+#     }
+
+
+# def test_create_book_blank_request():
+#     response = client.post(
+#         "/books/",
+#         json={
+#         },
+#     )
+#     assert response.status_code == 422
+#     assert response.json() == {'detail': [{'loc': ['body', 'name'],
+#                                            'msg': 'field required',
+#                                            'type': 'value_error.missing'}]}
+
+
+# def test_create_book_wrong_type():
+#     response = client.post(
+#         "/books/",
+#         json={
+#             "name": 4
+#         },
+#     )
+#     assert response.status_code == 422
+#     assert response.json() == {
+#         'detail': "book's name cant be blank and should contain atleast one alphabet from A to Z"}
+
+
+# def test_create_book_wrong_string():
+#     response = client.post(
+#         "/books/",
+#         json={
+#             "name": "45@"
+#         },
+#     )
+#     assert response.status_code == 422
+#     assert response.json() == {
+#         'detail': "book's name cant be blank and should contain atleast one alphabet from A to Z"}
+
+
+# def test_create_book_blank_name():
+#     response = client.post(
+#         "/books/",
+#         json={
+#             "name": ""
+#         },
+#     )
+#     assert response.status_code == 422
+#     assert response.json() == {
+#         'detail': "book's name cant be blank and should contain atleast one alphabet from A to Z"}
+
+#########################################################################################################
+# Update Tests
+
+
+# def test_update_book():
+#     response = client.patch(
+#         "/books/9",
+#         json={
+#             "name": "Newstring"
+#         },
+#     )
+#     assert response.status_code == 200
+#     assert response.json() == {
+#         "name": "Newstring",
+#         "id": 9,
+#         "books": []
+#     }
+
+
+# def test_update_book_blank_request():
+#     response = client.patch(
+#         "/books/9",
+#         json={
+#         },
+#     )
+#     assert response.status_code == 422
+#     assert response.json() == {
+#         'detail': "Empty Json"}
+
+
+# def test_update_book_wrong_type():
+#     response = client.patch(
+#         "/books/9",
+#         json={
+#             "name": 4
+#         },
+#     )
+#     assert response.status_code == 422
+#     assert response.json() == {
+#         'detail': "book's name cant be blank and should contain atleast one alphabet from A to Z"}
+
+
+# def test_update_book_wrong_string():
+#     response = client.patch(
+#         "/books/9",
+#         json={
+#             "name": "45@"
+#         },
+#     )
+#     assert response.status_code == 422
+#     assert response.json() == {
+#         'detail': "book's name cant be blank and should contain atleast one alphabet from A to Z"}
+
+
+# def test_update_book_blank_name():
+#     response = client.patch(
+#         "/books/9",
+#         json={
+#             "name": ""
+#         },
+#     )
+#     assert response.status_code == 422
+#     assert response.json() == {
+#         'detail': "Empty Json"}
+
 
 #########################################################################################################
 # Delete Tests
 
 
-def test_delete_author():
-    response = client.delete(
-        "/authors/9"
-    )
-    assert response.status_code == 200
-    assert response.json() == {"deleted": True}
+# def test_delete_book():
+#     response = client.delete(
+#         "/books/9"
+#     )
+#     assert response.status_code == 200
+#     assert response.json() == {"deleted": True}
 
 
-def test_delete__inexistent_author():
-    response = client.delete(
-        "/authors/99"
-    )
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Author not found"}
+# def test_delete__inexistent_book():
+#     response = client.delete(
+#         "/books/99"
+#     )
+#     assert response.status_code == 404
+#     assert response.json() == {"detail": "book not found"}
 
 
-def test_delete__bad_format_author():
-    response = client.delete(
-        "/authors/99r"
-    )
-    assert response.status_code == 422
-    assert response.json() == {'detail': [{'loc': [
-        'path', 'author_id'], 'msg': 'value is not a valid integer', 'type': 'type_error.integer'}]}
+# def test_delete__bad_format_book():
+#     response = client.delete(
+#         "/books/99r"
+#     )
+#     assert response.status_code == 422
+#     assert response.json() == {'detail': [{'loc': [
+#         'path', 'book_id'], 'msg': 'value is not a valid integer', 'type': 'type_error.integer'}]}
 
 
-def test_delete__blank_format_author():
-    response = client.delete(
-        "/authors/"
-    )
-    assert response.status_code == 405
-    assert response.json() == {'detail': 'Method Not Allowed'}
+# def test_delete__blank_format_book():
+#     response = client.delete(
+#         "/books/"
+#     )
+#     assert response.status_code == 405
+#     assert response.json() == {'detail': 'Method Not Allowed'}
