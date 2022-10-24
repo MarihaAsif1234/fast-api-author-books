@@ -1,15 +1,61 @@
 from fastapi.testclient import TestClient
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from main import auth_book_app as app
+from database import Base
+from main import get_db
 
-from main import auth_book_app
 
-client = TestClient(auth_book_app)
+##########################################################################
+# Create the new database session
 
-###############################################################################################
-# Create Tests
+SQLALCHEMY_DATABASE_URL = "sqlite:///./fakedb.db"
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={
+                       "check_same_thread": False})
+
+TestingSessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=engine)
 
 
-def test_read_author():
-    response = client.get("/authors/4")
+@pytest.fixture()
+def session():
+
+    # Create the database
+
+    # Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@pytest.fixture()
+def clientX(session):
+
+    # Dependency override
+
+    def override_get_db():
+        try:
+            yield session
+        finally:
+            session.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    yield TestClient(app)
+
+# ###############################################################################################
+# # Read Tests
+
+
+def test_read_author(clientX):
+    response = clientX.get("/authors/4")
     assert response.status_code == 200
     assert response.json() == {
         "name": "string",
@@ -18,8 +64,8 @@ def test_read_author():
     }
 
 
-def test_read_authors():
-    response = client.get("/authors/")
+def test_read_authors(clientX):
+    response = clientX.get("/authors/")
     assert response.status_code == 200
     assert response.json() == [
         {
@@ -73,17 +119,17 @@ def test_read_authors():
     ]
 
 
-def test_read_inexistent_author():
-    response = client.get("/authors/970")
+def test_read_inexistent_author(clientX):
+    response = clientX.get("/authors/970")
     assert response.status_code == 404
     assert response.json() == {"detail": "Author not found"}
 
-###############################################################################################
-# Create Tests
+# ###############################################################################################
+# # Create Tests
 
 
-def test_create_author():
-    response = client.post(
+def test_create_author(clientX):
+    response = clientX.post(
         "/authors/",
         json={
             "name": "string"
@@ -97,8 +143,8 @@ def test_create_author():
     }
 
 
-def test_create_author_blank_request():
-    response = client.post(
+def test_create_author_blank_request(clientX):
+    response = clientX.post(
         "/authors/",
         json={
         },
@@ -109,8 +155,8 @@ def test_create_author_blank_request():
                                            'type': 'value_error.missing'}]}
 
 
-def test_create_author_wrong_type():
-    response = client.post(
+def test_create_author_wrong_type(clientX):
+    response = clientX.post(
         "/authors/",
         json={
             "name": 4
@@ -121,8 +167,8 @@ def test_create_author_wrong_type():
         'detail': "Author's name cant be blank and should contain atleast one alphabet from A to Z"}
 
 
-def test_create_author_wrong_string():
-    response = client.post(
+def test_create_author_wrong_string(clientX):
+    response = clientX.post(
         "/authors/",
         json={
             "name": "45@"
@@ -133,8 +179,8 @@ def test_create_author_wrong_string():
         'detail': "Author's name cant be blank and should contain atleast one alphabet from A to Z"}
 
 
-def test_create_author_blank_name():
-    response = client.post(
+def test_create_author_blank_name(clientX):
+    response = clientX.post(
         "/authors/",
         json={
             "name": ""
@@ -144,12 +190,12 @@ def test_create_author_blank_name():
     assert response.json() == {
         'detail': "Author's name cant be blank and should contain atleast one alphabet from A to Z"}
 
-#########################################################################################################
-# Update Tests
+# #########################################################################################################
+# # Update Tests
 
 
-def test_update_author():
-    response = client.patch(
+def test_update_author(clientX):
+    response = clientX.patch(
         "/authors/9",
         json={
             "name": "Newstring"
@@ -163,8 +209,8 @@ def test_update_author():
     }
 
 
-def test_update_author_blank_request():
-    response = client.patch(
+def test_update_author_blank_request(clientX):
+    response = clientX.patch(
         "/authors/9",
         json={
         },
@@ -174,8 +220,8 @@ def test_update_author_blank_request():
         'detail': "Empty Json"}
 
 
-def test_update_author_wrong_type():
-    response = client.patch(
+def test_update_author_wrong_type(clientX):
+    response = clientX.patch(
         "/authors/9",
         json={
             "name": 4
@@ -186,8 +232,8 @@ def test_update_author_wrong_type():
         'detail': "Author's name cant be blank and should contain atleast one alphabet from A to Z"}
 
 
-def test_update_author_wrong_string():
-    response = client.patch(
+def test_update_author_wrong_string(clientX):
+    response = clientX.patch(
         "/authors/9",
         json={
             "name": "45@"
@@ -198,8 +244,8 @@ def test_update_author_wrong_string():
         'detail': "Author's name cant be blank and should contain atleast one alphabet from A to Z"}
 
 
-def test_update_author_blank_name():
-    response = client.patch(
+def test_update_author_blank_name(clientX):
+    response = clientX.patch(
         "/authors/9",
         json={
             "name": ""
@@ -210,28 +256,28 @@ def test_update_author_blank_name():
         'detail': "Empty Json"}
 
 
-#########################################################################################################
-# Delete Tests
+# #########################################################################################################
+# # Delete Tests
 
 
-def test_delete_author():
-    response = client.delete(
+def test_delete_author(clientX):
+    response = clientX.delete(
         "/authors/9"
     )
     assert response.status_code == 200
     assert response.json() == {"deleted": True}
 
 
-def test_delete__inexistent_author():
-    response = client.delete(
+def test_delete__inexistent_author(clientX):
+    response = clientX.delete(
         "/authors/99"
     )
     assert response.status_code == 404
     assert response.json() == {"detail": "Author not found"}
 
 
-def test_delete__bad_format_author():
-    response = client.delete(
+def test_delete__bad_format_author(clientX):
+    response = clientX.delete(
         "/authors/99r"
     )
     assert response.status_code == 422
@@ -239,8 +285,8 @@ def test_delete__bad_format_author():
         'path', 'author_id'], 'msg': 'value is not a valid integer', 'type': 'type_error.integer'}]}
 
 
-def test_delete__blank_format_author():
-    response = client.delete(
+def test_delete__blank_format_author(clientX):
+    response = clientX.delete(
         "/authors/"
     )
     assert response.status_code == 405

@@ -78,7 +78,7 @@ def delete_author(db: Session,  author_id: int):
 def get_book(db: Session, book_id: int):
     db_book = db.query(models.Book).filter(
         models.Book.id == book_id).first()
-    if len(db_book) == 0:
+    if db_book is None:
         raise HTTPException(status_code=404, detail="Book not found")
     return db_book
 
@@ -99,7 +99,7 @@ def create_author_s_book(db: Session, book: schemas.BookCreate, author_id: int):
     db_author = get_author(db, author_id=author_id)
     if(book.name == "" or regex.search('[a-zA-Z]', book.name) is None):
         raise HTTPException(
-            status_code=422, detail="Problem with book's name(should not be blank or an integer only string)")
+            status_code=422, detail="Book's name cant be blank and should contain atleast one alphabet from A to Z")
     else:
         db.add(db_book)
         db.commit()
@@ -110,19 +110,22 @@ def create_author_s_book(db: Session, book: schemas.BookCreate, author_id: int):
 def update_book(db: Session, book: schemas.BookUpdate, book_id: int):
     db_book = db.query(models.Book).filter(
         models.Book.id == book_id).first()
-    if db_book:
-        if(book.name == "" or regex.search('[a-zA-Z]', book.name) is None):
-            raise HTTPException(
-                status_code=422, detail="Book's name cant be blank and should contain atleast one alphabet from A to Z")
+    if book.name:
+        if db_book:
+            if(book.name == "" or regex.search('[a-zA-Z]', book.name) is None):
+                raise HTTPException(
+                    status_code=422, detail="Book's name cant be blank and should contain atleast one alphabet from A to Z")
+            else:
+                book_data = book.dict(exclude_unset=True)
+                for key, value in book_data.items():
+                    setattr(db_book, key, value)
+                db.add(db_book)
+                db.commit()
+                db.refresh(db_book)
         else:
-            book_data = book.dict(exclude_unset=True)
-            for key, value in book_data.items():
-                setattr(db_book, key, value)
-            db.add(db_book)
-            db.commit()
-            db.refresh(db_book)
+            raise HTTPException(status_code=404, detail="Book not found")
     else:
-        raise HTTPException(status_code=404, detail="Book not found")
+        raise HTTPException(status_code=422, detail="Empty Json")
     return db_book
 
 

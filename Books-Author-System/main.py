@@ -7,6 +7,8 @@ import models
 import schemas
 from database import SessionLocal, engine
 from sqlalchemy.orm import Session
+
+
 models.Base.metadata.create_all(bind=engine)
 
 
@@ -52,20 +54,20 @@ def read_authors(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
 
 @auth_book_app.get("/authors/{author_id}", response_model=schemas.Author)
 def read_author(author_id: int, db: Session = Depends(get_db)):
-    db_user = crud.get_author(db, author_id=author_id)
-    return db_user
+    db_author = crud.get_author(db, author_id=author_id)
+    return db_author
 
 
 @auth_book_app.patch("/authors/{author_id}", response_model=schemas.Author)
 def update_author(author: schemas.AuthorUpdate, author_id: int, db: Session = Depends(get_db)):
-    db_user = crud.update_author(db, author=author, author_id=author_id)
-    return db_user
+    db_author = crud.update_author(db, author=author, author_id=author_id)
+    return db_author
 
 
 @auth_book_app.delete("/authors/{author_id}")
 def delete_author(author_id: int, db: Session = Depends(get_db)):
-    db_user = crud.delete_author(db,  author_id=author_id)
-    return db_user
+    db_author = crud.delete_author(db,  author_id=author_id)
+    return db_author
 
 
 ########################################################################################
