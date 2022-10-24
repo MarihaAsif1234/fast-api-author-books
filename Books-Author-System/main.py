@@ -1,5 +1,5 @@
 from unicodedata import name
-from fastapi import FastAPI, status, Depends, HTTPException, Request, Response
+from fastapi import FastAPI,  Depends,  Request, Response
 from typing import Union, List
 from pydantic import BaseModel
 import crud
